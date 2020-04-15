@@ -2,10 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import * as serviceWorker from './serviceWorker';
-import Category from './Category' 
+import App from './App' 
 
 ReactDOM.render(
-    <Category/>,document.getElementById('root')
+    <App/>,document.getElementById('root')
 );
 
 
