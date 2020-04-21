@@ -6,6 +6,7 @@ import './App.css'
 import { Container, Form, FormGroup ,Button, Table} from 'reactstrap';
 import {Link} from 'react-router-dom'
 import Category from './Category';
+import Moment from 'react-moment';
 
 class Expense extends Component {
     // {
@@ -18,10 +19,15 @@ class Expense extends Component {
     //   }
 
             emptyItem = {
-                description:'',
-                 datePurchased:'',
-                 location:'',
-                 categories:'3,Bills'
+                
+                    "category": {
+                      "categoryName": ""
+                    },
+                    "datePurchased": new Date(),
+                    "description": "",
+                    "id": 0,
+                    "location": ""
+                  
             }
 
             constructor(props){
@@ -31,9 +37,68 @@ class Expense extends Component {
                     isLoading: true,
                     expenses :[],
                     categories: [],
-                    Item: this.emptyItem
+                    item: this.emptyItem
+
                  }
+                 this.handleSubmit =this.handleSubmit.bind(this);
+                 this.handleChange =this.handleChange.bind(this);
+                 this.handleDateChange =this.handleDateChange.bind(this);
+
+
             }
+
+    async handleSubmit(event){
+        event.preventDefault();
+        const {item}= this.state;
+        await fetch(`/expense`, { 
+            method: 'POST',
+            headers: {
+                'Accept' : 'application/json',
+                'Content-Type' : 'application/json'
+ 
+            },
+            body: JSON.stringify(item),
+        });
+        console.log(this.state)
+        this.props.history.push('/expense');
+    }
+
+    handleChange(event){
+        const target =  event.target;
+        const value = target.value;
+        const name = target.name;
+        let item= {...this.state.item};
+        item[name] =value;
+        this.setState({item})
+        console.log(this.state.item)
+    }
+    handleDateChange(date){
+        let item= {...this.state.item};
+        item.datePurchased=date;
+        this.setState({item})
+        console.log(this.state.item)
+
+
+
+
+    }
+
+
+   async remove(id){
+       await fetch(`/expense/${id}`, {
+           method: 'DELETE',
+           headers: {
+               'Accept' : 'application/json',
+               'Content-Type' : 'application/json'
+
+           }
+       }).then(() =>{
+           let updateExpenses =[...this.state.expenses].filter( i => i.id !== id);
+           this.setState({expenses : updateExpenses})
+       });
+ 
+            
+   }
 
    
     async componentDidMount (){
@@ -45,7 +110,7 @@ class Expense extends Component {
         const bodyExp= await responseExp.json();
         this.setState({expenses : bodyExp, isLoading : false})
     }
-    hangleChange
+    
     render() { 
         const title=<h3>Expenses</h3>
         const {categories} = this.state;
@@ -55,7 +120,7 @@ class Expense extends Component {
         return(<div>Loadinggggg....</div>)
 
         let  optionlist = categories.map(category =>
-            <option id= {category.id}>
+            <option value= {category.id} key= {category.id}>
                    {category.categoryName}
                    
             </option>
@@ -63,11 +128,12 @@ class Expense extends Component {
 
             let rows=
             expenses.map(expense=>
-                <tr>
+                <tr key={expense.id}>
                     <td>{expense.description}</td>
                     <td>{expense.location}</td>
-                    <td>{expense.category.categoryName}</td>
-                    <td><Button size="sm" color= "danger" onClick={()=> this.remove(expense.id)}>Delete</Button></td>
+                    <td><Moment date={expense.datePurchased} format="YYYY/MM/DD"/></td>
+                     <td>{expense.category.categoryName}</td>
+                    <td> <Button size="sm" color="danger" onClick={()=> this.remove(expense.id)}>Delete</Button></td>
 
 
                 </tr>)
@@ -80,12 +146,12 @@ class Expense extends Component {
                         <FormGroup>
                             <label for="title">Title</label>
                             <input type="text" name="title" id="title" 
-                            onChange={this.hangleChange}></input>
+                            onChange={this.handleChange}></input>
                         </FormGroup>
 
                         <FormGroup>
                             <label for="category">Category</label>
-                            <select>
+                            <select onChange={this.handleChange}>
                             {optionlist}
                             </select>
                             
@@ -94,14 +160,14 @@ class Expense extends Component {
 
                         <FormGroup>
                             <label for="expenseDate">Expense Date</label>
-                            <DatePicker selected={this.state.date} 
-                            onChange={this.hangleChange}/>
+                            <DatePicker selected={this.state.item.datePurchased} 
+                            onChange={this.handleDateChange}/>
                         </FormGroup>
 
                         <FormGroup>
                             <label for="location"> Location</label>
                             <input type="text" name="location" id="location"
-                             onChange={this.hangleChange}></input>
+                             onChange={this.handleChange}></input>
                         </FormGroup>
                         <FormGroup>                       
                              <Button color="primary" type="submit">Save</Button>{' '}
@@ -116,6 +182,7 @@ class Expense extends Component {
                                 <tr>
                                     <th width="20%">Description</th>
                                      <th width="10%">Location</th>
+                                     <th width="40%">Date</th>
                                      <th >Category </th>
                                      <th width="10%">Action</th>
                                  </tr>
